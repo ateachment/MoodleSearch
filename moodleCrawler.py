@@ -200,7 +200,7 @@ import nltk
 
 
 import re             # regular expression
-import pickle
+import cloudpickle as pickle
 import os
 
 from sklearn.feature_extraction.text import TfidfVectorizer

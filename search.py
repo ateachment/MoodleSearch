@@ -32,7 +32,7 @@ def search():
     
     # search terms
     if(search is not None):
-        import pickle
+        import cloudpickle as pickle
         from sklearn.metrics.pairwise import cosine_similarity
         import os
 
