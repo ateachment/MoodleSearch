@@ -16,7 +16,7 @@ function appendData(data) {
   if(data.length > 0)
     for (var i = 0; i < data.length; i++) 
     {
-      alert(data[i].shortText.length + " " + data[i].shortText);
+      // alert(data[i].shortText.length + " " + data[i].shortText);
       var urlText = "<span>"+data[i].link + "</span>";
       var fullUrlText = "";
       var resultHeader = "";
