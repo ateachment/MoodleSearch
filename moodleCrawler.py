@@ -200,8 +200,7 @@ nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('stopwords')
 
-import numpy as np
-import pandas as pd
+
 import re             # regular expression
 import pickle
 import os
