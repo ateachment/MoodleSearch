@@ -2,6 +2,20 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
+def stemmed_words(doc):
+    import nltk
+    from nltk.corpus import stopwords
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from nltk.stem.snowball import GermanStemmer
+    import re                                               # regular expression
+    stop = nltk.corpus.stopwords.words('german')
+    analyzer = TfidfVectorizer().build_analyzer()
+    stemmer = GermanStemmer()
+    stop += stopwords.words('german') + stopwords.words('english')
+    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-Z]{2,}\b', w)) # exclude stopwords, numbers and stemm
+
+
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('search.html')
@@ -49,17 +63,6 @@ def search():
         print(json.dumps(list))
         return jsonify(list)
     
-def stemmed_words(doc):
-    import nltk
-    from nltk.corpus import stopwords
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from nltk.stem.snowball import GermanStemmer
-    import re                                               # regular expression
-    stop = nltk.corpus.stopwords.words('german')
-    analyzer = TfidfVectorizer().build_analyzer()
-    stemmer = GermanStemmer()
-    stop += stopwords.words('german') + stopwords.words('english')
-    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-Z]{2,}\b', w)) # exclude stopwords, numbers and stemm
 
 if __name__ == '__main__':
     app.run()
