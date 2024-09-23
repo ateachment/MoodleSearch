@@ -168,7 +168,7 @@ def crawlMoodleCategoryWithLogin():  # subsection
           crawlCourse(uri, shortText)
 
 import sys, getopt
-def main(argv):
+def app(argv):
   global input
   try:
     opts, args = getopt.getopt(argv,"h:i:",["input="])
@@ -190,15 +190,13 @@ def main(argv):
     sys.exit(2)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+   app(sys.argv[1:])
 
 
 import requests
 import bs4
 import nltk
-#nltk.download('punkt')
-#nltk.download('wordnet')
-#nltk.download('stopwords')
+
 
 
 import re             # regular expression
@@ -246,3 +244,4 @@ with open(filenameTf, "wb") as fp:
   pickle.dump(tf, fp)
 with open(filenameTf_fit, "wb") as fp:
   pickle.dump(tf_fit, fp)
+
