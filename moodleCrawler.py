@@ -196,9 +196,9 @@ if __name__ == "__main__":
 import requests
 import bs4
 import nltk
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('stopwords')
+#nltk.download('punkt')
+#nltk.download('wordnet')
+#nltk.download('stopwords')
 
 
 import re             # regular expression
