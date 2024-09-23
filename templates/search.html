@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Moodle - Suche</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/search.css')}}">
+</head>
+
+<body>
+  <div class="container">
+    <div class="logo">
+      <a href="https://eick-at.de" target="_blank">
+        <img src="{{url_for('static', filename='images/eickLogo.png')}}" alt="Eick A Teachment" class="img-fluid">
+      </a>
+    </div>
+    <div class="main">
+      <div class="search">
+        <!--<form action = "https://h.eick-at.de/cgi-bin/search.py" method = "post">-->
+        <input id="search" type="text" class="searchTerm" placeholder="Search Eick's Moodle Courses" autofocus>
+        <button id="fetchdata" type="submit" class="searchButton">
+          <i class="fa fa-search"></i>
+        </button>
+        <!--</form> -->
+      </div>
+      <div id="result" class="results">
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+<script src="{{url_for('static', filename='js/search.js')}}"></script>
+
+
+
