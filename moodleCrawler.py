@@ -1,3 +1,6 @@
+# Run with command line parameters :
+# python moodleCrawler -i yourIdentifier
+
 def cutText(txt): # gets list of words an extract the first 18 of them
   wordlength = 18
   wordlist = txt.split(' ')
