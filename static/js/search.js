@@ -26,10 +26,10 @@ function appendData(data) {
           resultHeader = data[i].shortText[0];
           snippet = data[i].shortText[1];
           break;
-        case 4:                           // section
+        case 3:                           // section
           resultHeader = data[i].shortText[2];
           fullUrlText += " > " + data[i].shortText[0];
-          snippet = data[i].shortText[3];
+          snippet = data[i].shortText[1];
           break;
         case 4:                           // page title
           resultHeader = data[i].shortText[3];
