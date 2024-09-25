@@ -10,13 +10,13 @@ def cutText(txt): # gets list of words an extract the first 18 of them
     return txt
 
 def scrapePage(link,linkText,shortText):
+  short_txt = ""
   head = requests.head(link, allow_redirects=True)
   header = head.headers
   content_type = header.get('content-type')
   if content_type == "text/html; charset=utf-8":  # follow only html content
     r = session.get(link)                         # Seiten aufrufen
-    short_txt = ""
-    print(content_type, link)
+    #print(content_type, link)
     if r.ok:
       soup = bs4.BeautifulSoup(r.text,'html.parser')
       markUpPageContent=soup.find("div", {"id": "page-content"})
@@ -38,18 +38,30 @@ def scrapePage(link,linkText,shortText):
             br.replace_with(" ")
 
         #print(markUpPageContent)
-        paragraphs = markUpPageContent.find_all_next(['p','h1','h2','h3','h4','h5','h6'])   # Absätze
+        paragraphs = markUpPageContent.find_all(['p','h1','h2','h3','h4','h5','h6'])   # Absätze
         if(paragraphs is not None):
           txt = ""
-          short_txt = ''
+          short_txt = ""
           for paragraph in paragraphs:
             txt += paragraph.get_text() + ' '
             if(len(short_txt) < 50 ):
-              short_txt += ' ' + paragraph.get_text()
-          txt2 = linkText + ' ' + txt
-        rawTexts.append(txt2)                         # append txt of page to rawTexts
-        shortTexts.append(shortText + [short_txt])         # append short_txt
-        # print(txt2)
+              short_txt += paragraph.get_text()
+        rawTexts[-1] += txt                                # add txt of page to last element of rawTexts
+        shortTexts[-1] += [short_txt]         # add short_txt to last element of shortTexts
+        '''
+        print("RAW")
+        print(rawTexts[-1])
+
+        print("SHORT")
+        print(shortTexts[-1])
+        
+        print("TXT2")
+        print(txt)
+        print("RAW")
+        print(rawTexts)
+        print("SHORT")
+        print(shortTexts)
+        '''
 
 def crawlCourse(link, shortText):
   r = session.get(link)
@@ -88,12 +100,13 @@ def crawlCourse(link, shortText):
             for s in markUpName.select('span'):
               s.extract()
             linkText = markUpName.get_text()
-            # print(link3)
+            print(link3)
             #print(linkText)
             links.append(link3)
-            # rawTexts.append(linkText)
-            # shortTexts.append(shortText + [sectionname] + [linkText])
+            rawTexts.append(linkText)
+            shortTexts.append(shortText + [sectionname] + [linkText])
             scrapePage(link3,linkText,shortText + [sectionname] + [linkText])
+            #exit();
             
 
 
