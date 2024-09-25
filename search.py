@@ -59,6 +59,10 @@ def search():
         sorted_similarities = sorted(((value, index) for index, value in enumerate(cosinus_similarities[0])), reverse=True)
 
         #output
+        print(len(shortTextsLoaded))
+        print(len(linksLoaded))
+        print(len(sorted_similarities))
+        
         list = [{"shortText": shortTextsLoaded[similarity[1]], "link": linksLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
         print(json.dumps(list))
         return jsonify(list)

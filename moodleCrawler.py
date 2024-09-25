@@ -10,41 +10,46 @@ def cutText(txt): # gets list of words an extract the first 18 of them
     return txt
 
 def scrapePage(link,linkText,shortText):
-  r = session.get(link)                         # Seiten aufrufen
-  short_txt = ""
-  if(r.ok):
-    soup = bs4.BeautifulSoup(r.text,'html.parser')
-    markUpPageContent=soup.find("div", {"id": "page-content"})
-    if markUpPageContent is not None:  # link to source code etc.
-      #for tag in markUpPageContent.select('form, navitem, gradingsummary'):      # get rid of forms
-      #  tag.decompose()
-      for tag in soup.select('span.nolink'):      # get rid of LaTeX formules
-        tag.decompose()
-      for tag in soup.select('div.mediaplugin'):  # get rid of Videos
-        tag.decompose()
-      for tag in soup.select('iframe'):           # get rid of iframes
-        tag.decompose()
-      for tag in soup.select('div.footer-content-popover'):  # get rid of Contents of question mark button
-        tag.decompose()
-      for tag in soup.select('div.drawer'):  # get rid of Contents of question mark button
-        tag.decompose()
+  head = requests.head(link, allow_redirects=True)
+  header = head.headers
+  content_type = header.get('content-type')
+  if content_type == "text/html; charset=utf-8":  # follow only html content
+    r = session.get(link)                         # Seiten aufrufen
+    short_txt = ""
+    print(content_type, link)
+    if r.ok:
+      soup = bs4.BeautifulSoup(r.text,'html.parser')
+      markUpPageContent=soup.find("div", {"id": "page-content"})
+      if markUpPageContent is not None:  # link to source code etc.
+        #for tag in markUpPageContent.select('form, navitem, gradingsummary'):      # get rid of forms
+        #  tag.decompose()
+        for tag in soup.select('span.nolink'):      # get rid of LaTeX formules
+          tag.decompose()
+        for tag in soup.select('div.mediaplugin'):  # get rid of Videos
+          tag.decompose()
+        for tag in soup.select('iframe'):           # get rid of iframes
+          tag.decompose()
+        for tag in soup.select('div.footer-content-popover'):  # get rid of Contents of question mark button
+          tag.decompose()
+        for tag in soup.select('div.drawer'):  # get rid of Contents of question mark button
+          tag.decompose()
 
-      for br in soup.select("br"):
-          br.replace_with(" ")
+        for br in soup.select("br"):
+            br.replace_with(" ")
 
-      #print(markUpPageContent)
-      paragraphs = markUpPageContent.find_all_next(['p','h1','h2','h3','h4','h5','h6'])   # Absätze
-      if(paragraphs is not None):
-        txt = ""
-        short_txt = ''
-        for paragraph in paragraphs:
-          txt += paragraph.get_text() + ' '
-          if(len(short_txt) < 50 ):
-            short_txt += ' ' + paragraph.get_text()
-        txt2 = linkText + ' ' + txt
-      rawTexts.append(txt2)                         # append txt of page to rawTexts
-      shortTexts.append(shortText + [short_txt])         # append short_txt
-      # print(txt2)
+        #print(markUpPageContent)
+        paragraphs = markUpPageContent.find_all_next(['p','h1','h2','h3','h4','h5','h6'])   # Absätze
+        if(paragraphs is not None):
+          txt = ""
+          short_txt = ''
+          for paragraph in paragraphs:
+            txt += paragraph.get_text() + ' '
+            if(len(short_txt) < 50 ):
+              short_txt += ' ' + paragraph.get_text()
+          txt2 = linkText + ' ' + txt
+        rawTexts.append(txt2)                         # append txt of page to rawTexts
+        shortTexts.append(shortText + [short_txt])         # append short_txt
+        # print(txt2)
 
 def crawlCourse(link, shortText):
   r = session.get(link)
@@ -61,7 +66,6 @@ def crawlCourse(link, shortText):
 
       link2 = link + "#" + section_id         # calculate link of section
       links.append(link2)                                   # append link to list links
-      # extract text of section
       #print(sectionname)
       rawTexts.append(sectionname)                          # append text to list rawTexts
 
@@ -75,9 +79,8 @@ def crawlCourse(link, shortText):
       #print(summarytext)
       #print(shortText[-1])
 
-      markUpLink = section.find('a', attrs={'class':'aalink'})
-      #print(markUpLink)
-      if(markUpLink is not None):
+      for markUpLink in section.find_all('a', attrs={'class':'aalink'}):
+        #print(markUpLink)
         link3 = markUpLink.attrs['href']
         if(link3 is not None):
           markUpName = markUpLink.span
@@ -86,9 +89,12 @@ def crawlCourse(link, shortText):
               s.extract()
             linkText = markUpName.get_text()
             # print(link3)
-            # print(linkText)
+            #print(linkText)
             links.append(link3)
+            # rawTexts.append(linkText)
+            # shortTexts.append(shortText + [sectionname] + [linkText])
             scrapePage(link3,linkText,shortText + [sectionname] + [linkText])
+            
 
 
 
@@ -127,7 +133,7 @@ def crawlMoodlePublicCourses():
       rawTexts.append(coursename + ' ' + summaryText)
       shortText = [coursename, cutText(summaryText)]         # init shortText
       shortTexts.append(shortText)                 # append new shortText
-      print(uri, shortText)
+      # print(uri, shortText)
       crawlCourse(uri, shortText)
       
 
@@ -187,6 +193,7 @@ def app(argv):
     crawlMoodleCategoryWithLogin()
   else:
     print("Input is '" + input + "'. Has to be: '" + settings.identifier + "' or '" + settings.identifier2 + "'.")
+    print("For example: moodleCrawler.py -i eick-at")
     sys.exit(2)
 
 if __name__ == "__main__":
@@ -245,3 +252,4 @@ with open(filenameTf, "wb") as fp:
 with open(filenameTf_fit, "wb") as fp:
   pickle.dump(tf_fit, fp)
 
+print(len(links)),print(len(rawTexts),print(len(shortTexts)))
