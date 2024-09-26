@@ -244,10 +244,11 @@ analyzer = TfidfVectorizer().build_analyzer()
 stop += stopwords.words('german') + stopwords.words('english')
 
 def stemmed_words(doc):
-    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-Z]{2,}\b', w)) # exclude stopwords, numbers and stemm
+    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-ZäöüÄÖÜß]{2,}\b', w)) # exclude stopwords, numbers and stemm
+                                                                                                                  # but includes german umlauts
 
 
-tf = TfidfVectorizer(decode_error="replace", analyzer=stemmed_words)
+tf = TfidfVectorizer(decode_error="strict", strip_accents="unicode", analyzer=stemmed_words)
 tf_fit = tf.fit_transform(rawTexts)
 
 picklesDir="data/"
