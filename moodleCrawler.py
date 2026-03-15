@@ -1,3 +1,4 @@
+# 
 # Run with command line parameters :
 # python moodleCrawler -i yourIdentifier
 
@@ -65,18 +66,19 @@ def scrapePage(link,linkText,shortText):
 
 def crawlCourse(link, shortText):
   r = session.get(link)
+  #print(link)
   #print(r.status_code)
   if(r.ok):    # status_code 200
     soup = bs4.BeautifulSoup(r.text,'html5lib')
     #print(soup)
-    for section in soup.findAll('li',{'class':'section'}):            #    ('h3',{'class':'sectionname'}):  # iterate sections
+    for section in soup.find_all('li',{'class':'section'}):            #    ('h3',{'class':'sectionname'}):  # iterate sections
       #print(section)
       section_id = section.attrs['id']
       #print(section_id)
-      sectionname = section.find('h3',{'class':'sectionname'}).get_text(strip=True, separator=" ")
+      sectionname = section.select_one(".sectionname").get_text(strip=True, separator=" ")
       #print(sectionname)
 
-      link2 = link + "#" + section_id         # calculate link of section
+      link2 = section.select_one(".sectionname a")["href"]  # find link of section
       links.append(link2)                                   # append link to list links
       #print(sectionname)
       rawTexts.append(sectionname)                          # append text to list rawTexts
@@ -240,8 +242,8 @@ stop.append('etc')
 
 
 stemmer = GermanStemmer()
-analyzer = TfidfVectorizer().build_analyzer()
-stop += stopwords.words('german') + stopwords.words('english')
+analyzer = TfidfVectorizer(strip_accents="unicode").build_analyzer()
+stop = set(stopwords.words('german')).union(set(stopwords.words('english')))  # combine german and english stop words
 
 def stemmed_words(doc):
     return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-ZäöüÄÖÜß]{2,}\b', w)) # exclude stopwords, numbers and stemm

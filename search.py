@@ -8,11 +8,10 @@ def stemmed_words(doc):
     from sklearn.feature_extraction.text import TfidfVectorizer
     from nltk.stem.snowball import GermanStemmer
     import re                                               # regular expression
-    stop = nltk.corpus.stopwords.words('german')
-    analyzer = TfidfVectorizer().build_analyzer()
+    analyzer = TfidfVectorizer(strip_accents="unicode").build_analyzer()
     stemmer = GermanStemmer()
-    stop += stopwords.words('german') + stopwords.words('english')
-    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-Z]{2,}\b', w)) # exclude stopwords, numbers and stemm
+    stop = set(stopwords.words('german')).union(set(stopwords.words('english')))  # combine german and english stop words
+    return (stemmer.stem(w) for w in analyzer(doc) if w not in stop and re.match( r'\b[a-zA-ZäöüÄÖÜß]{2,}\b', w)) # exclude stopwords, numbers and stemm
 
 
 
