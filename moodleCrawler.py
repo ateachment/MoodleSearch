@@ -11,13 +11,13 @@ def cutText(txt): # gets list of words an extract the first 18 of them
     return txt
 
 def scrapePage(link,linkText,shortText):
+  print("SCRAPE_PAGE: ", linkText)
   short_txt = ""
-  head = requests.head(link, allow_redirects=True)
+  head = requests.head(link, allow_redirects=True, timeout=10)
   header = head.headers
   content_type = header.get('content-type')
-  if content_type == "text/html; charset=utf-8":  # follow only html content
-    r = session.get(link)                         # Seiten aufrufen
-    #print(content_type, link)
+  if content_type.__contains__("text/html"):        # follow only html content
+    r = session.get(link)                           # Seiten aufrufen
     if r.ok:
       soup = bs4.BeautifulSoup(r.text,'html.parser')
       markUpPageContent=soup.find("div", {"id": "page-content"})
@@ -47,22 +47,49 @@ def scrapePage(link,linkText,shortText):
             txt += paragraph.get_text() + ' '
             if(len(short_txt) < 50 ):
               short_txt += paragraph.get_text()
-        rawTexts[-1] += txt                                # add txt of page to last element of rawTexts
+        rawTexts[-1] += ' ' + txt                                # add txt of page to last element of rawTexts
         shortTexts[-1] += [short_txt]         # add short_txt to last element of shortTexts
-        '''
-        print("RAW")
-        print(rawTexts[-1])
 
-        print("SHORT")
-        print(shortTexts[-1])
-        
-        print("TXT2")
-        print(txt)
-        print("RAW")
-        print(rawTexts)
-        print("SHORT")
-        print(shortTexts)
-        '''
+def crawlPageLinks(activity, sectionname, shortText, rawText):
+
+    global rawTexts, shortTexts, links
+    link_page = activity.select_one("a.aalink")
+
+    shortTextAddition = []
+    rawTextAddition = ""
+    if link_page:
+        url = link_page["href"]
+        if "/mod/page/view.php" in url:
+
+            linkText = link_page.select_one(".instancename").contents[0].strip()
+            links.append(url)
+
+            shortTexts.append(shortText + [linkText])
+            shortTextAddition = [sectionname] + [linkText]
+            rawTextAddition = ' ' + linkText
+            rawTexts.append(rawText + rawTextAddition)                     # append text to list rawTexts
+            scrapePage(url,linkText,shortText + [sectionname] + [linkText])
+
+    return shortTextAddition, rawTextAddition
+
+def crawlSectionLinks(link_section, section, sectionname, shortText, rawText):
+    global shortTexts, rawTexts
+
+    links.append(link_section["href"])                    # append link to list links
+    
+    summarytext = section.find('div', attrs={'class':'summarytext'})
+    if (summarytext is not None):
+        summarytext = summarytext.get_text(strip=True, separator=" ")
+        #print("SUMMARYTEXT=", summarytext)
+        shortTextAddition = [sectionname] + [cutText(summarytext)]
+        rawTextAddition = ' ' + sectionname + ' ' + summarytext
+    else:
+        shortTextAddition = [sectionname]
+        rawTextAddition = ' ' + sectionname
+
+    shortTexts.append(shortText + shortTextAddition)      # append shortText
+    rawTexts.append(rawText + rawTextAddition)            # append text to list rawTexts
+    return shortTextAddition, rawTextAddition
 
 def crawlCourse(link, shortText):
   r = session.get(link)
@@ -71,44 +98,45 @@ def crawlCourse(link, shortText):
   if(r.ok):    # status_code 200
     soup = bs4.BeautifulSoup(r.text,'html5lib')
     #print(soup)
-    for section in soup.find_all('li',{'class':'section'}):            #    ('h3',{'class':'sectionname'}):  # iterate sections
-      #print(section)
-      section_id = section.attrs['id']
-      #print(section_id)
-      sectionname = section.select_one(".sectionname").get_text(strip=True, separator=" ")
-      #print(sectionname)
+    for section in soup.select("ul[data-for='course_sectionlist'] > li.section"):
 
-      link2 = section.select_one(".sectionname a")["href"]  # find link of section
-      links.append(link2)                                   # append link to list links
-      #print(sectionname)
-      rawTexts.append(sectionname)                          # append text to list rawTexts
+        # SECTION parser
+        sectionname = section["data-sectionname"]
 
-      #print(link2, shortTexts[-1])
-      summarytext = section.find('div', attrs={'class':'summarytext'})
-      if (summarytext is not None):
-        summarytext = summarytext.get_text(strip=True, separator=" ")
-        shortTexts.append(shortText + [sectionname] + [cutText(summarytext)])          # append shortText
-      else:
-        shortTexts.append(shortText + [sectionname])          # append shortText
-      #print(summarytext)
-      #print(shortText[-1])
+        link_section = section.select_one("h3.sectionname a")
+        if link_section:
+            shortTextAdditionSection, rawTextAdditionSection = crawlSectionLinks(link_section, section, sectionname, shortText, rawText)
 
-      for markUpLink in section.find_all('a', attrs={'class':'aalink'}):
-        #print(markUpLink)
-        link3 = markUpLink.attrs['href']
-        if(link3 is not None):
-          markUpName = markUpLink.span
-          if not("Link/URL" in markUpName.get_text()):
-            for s in markUpName.select('span'):
-              s.extract()
-            linkText = markUpName.get_text()
-            print(link3)
-            #print(linkText)
-            links.append(link3)
-            rawTexts.append(linkText)
-            shortTexts.append(shortText + [sectionname] + [linkText])
-            scrapePage(link3,linkText,shortText + [sectionname] + [linkText])
-            #exit();
+
+        activitylist = section.select_one("ul[data-for='cmlist']")
+        if not activitylist:
+            continue
+        
+
+        for activity in activitylist.find_all("li", class_="activity", recursive=False):
+
+            classes = activity.get("class", [])
+
+            # normale Aktivität
+            if "modtype_subsection" not in classes:
+                shortTextAddition, rawTextAddition = crawlPageLinks(activity, sectionname, shortText + shortTextAdditionSection, rawText + rawTextAdditionSection)
+
+            
+            else:  # Subsection separat behandeln
+                
+                # SUBSECTION parser
+                subsection = activity.select_one("li.section.delegated-section")
+                if subsection:
+                    subsection_name = subsection["data-sectionname"]
+
+                    link_subsection = section.select_one("h4.sectionname a")
+                    if link_subsection:
+                        shortTextAdditionSubsection, rawTextAdditionSubsection = crawlSectionLinks(link_subsection, subsection, subsection_name, shortText + shortTextAdditionSection, rawText + rawTextAdditionSection)
+
+                    for subactivity in subsection.select("li.activity"):
+                        crawlPageLinks(subactivity, sectionname, shortText + shortTextAdditionSection + shortTextAdditionSubsection, rawText + rawTextAdditionSection + rawTextAdditionSubsection)
+
+        
             
 
 
@@ -122,6 +150,7 @@ session.headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:13
 
 links = []
 rawTexts = []
+rawText = ""  # init rawText
 shortTexts = []
 input = ""  # comand line arg
 
@@ -145,7 +174,8 @@ def crawlMoodlePublicCourses():
         summaryText = ''
       # print("summary="+summary)
       links.append(uri)
-      rawTexts.append(coursename + ' ' + summaryText)
+      rawText = coursename + ' ' + summaryText
+      rawTexts.append(rawText)
       shortText = [coursename, cutText(summaryText)]         # init shortText
       shortTexts.append(shortText)                 # append new shortText
       # print(uri, shortText)
