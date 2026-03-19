@@ -2,6 +2,8 @@
 # ignore settings files
 settings.*
 
+**/*.ipynb
+
 # ignore data files
 /data
 
@@ -54,3 +56,4 @@ dist/**
 *.xlf
 *.nls.*.json
 *.i18n.json
+Jupyter Notebooks/moodleSearch_eval.ipynb
