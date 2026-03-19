@@ -68,4 +68,7 @@ def search():
     
 
 if __name__ == '__main__':
+    print("Starting Flask server...")
+    print("Access the search interface at http://localhost:5000/?i=eick-at")
+    
     app.run()

@@ -1,3 +1,5 @@
+// search.js - JavaScript code for handling search functionality on the client side
+
 const fetchDataBtn = document.querySelector("#fetchdata");
 const result = document.getElementById("result");
 /*
@@ -19,30 +21,31 @@ function appendData(data) {
       // alert(data[i].shortText.length + " " + data[i].shortText);
       var urlText = "<span>"+data[i].link + "</span>";
       var fullUrlText = "";
-      var resultHeader = "";
+      var resultHeader = data[i].shortText[0];
       var snippet = "";
       switch(data[i].shortText.length) {    
         case 2:                           // course
-          resultHeader = data[i].shortText[0];
+          //resultHeader = data[i].shortText[0];
           snippet = data[i].shortText[1];
           break;
         case 3:                           // section
-          resultHeader = data[i].shortText[2];
+          //resultHeader = data[i].shortText[2];
           fullUrlText += " > " + data[i].shortText[0];
           snippet = data[i].shortText[1];
           break;
         case 4:                           // page title
-          resultHeader = data[i].shortText[3];
+          //resultHeader = data[i].shortText[3];
           fullUrlText += " > " + data[i].shortText[1] + " > " + data[i].shortText[2];
           break;
         case 5:                           // page content
-          resultHeader = data[i].shortText[3];
+          //resultHeader = data[i].shortText[3];
           fullUrlText += " > " + data[i].shortText[0] + " > " + data[i].shortText[2];
           snippet = data[i].shortText[4];
           break;
       }
+
+      urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
       urlText += "<span>" + fullUrlText + "</span>\n";
-      urlText += "<h2>" + resultHeader + "</h2>\n";
       urlText += "<div class='snippet'>" + snippet + "</div>\n";   
       var div = document.createElement("div");  
       div.className += " link";

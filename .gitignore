@@ -2,7 +2,8 @@
 # ignore settings files
 settings.*
 
-**/*.ipynb
+**/*.ipynb        # ignore Jupyter Notebooks
+**/*.npy          # ignore tfidf matrix file (output of notebook)
 
 # ignore data files
 /data
