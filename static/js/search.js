@@ -13,6 +13,29 @@ var downloadTimer = setInterval(function() {
 }, 1000);
 */
 
+function getFullUrlText(data, startIndex) {
+  var fullUrlText = "";
+  for (var i = startIndex; i < data.shortText.length; i++) {
+    if (data.shortText[i].trim() !== "") {
+      fullUrlText += " > " + data.shortText[i];
+    }
+  }
+  return fullUrlText;
+}
+
+
+
+
+function findFirstNonEmptyString(arr, startIndex = 0) {
+  for (let i = startIndex; i < arr.length; i++) {
+    if (arr[i].trim() !== "") {
+      return arr[i];
+    }
+  }
+  return "empty"; // Return an empty string if no non-empty string is found
+}
+
+
 function appendData(data) {
   //var mainContainer = document.getElementById("myData");
   if(data.length > 0)
@@ -21,36 +44,30 @@ function appendData(data) {
       // alert(data[i].shortText.length + " " + data[i].shortText);
       var urlText = "";  // "<span>"+data[i].link + "</span>";
       var fullUrlText = "";
-      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'> " + data[i].shortText[0];
+      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'>" + data[i].shortText[0];
       var snippet = "";
-      switch(data[i].shortText.length) {    
-        case 2:                           // course
-          //resultHeader = data[i].shortText[0];
-          snippet = "Kurs: " + data[i].shortText[1];
-          break;
-        case 3:                           // section
-          //resultHeader = data[i].shortText[2];
-          //fullUrlText += " > " + data[i].shortText[0];
-          snippet = data[i].shortText[1];
-          break;
-        case 4:                           // page title
-          //resultHeader = data[i].shortText[3];
-          //fullUrlText += " > " + data[i].shortText[1] + " > " + data[i].shortText[2];
-          break;
-        case 5:                           // page content
-          //resultHeader = data[i].shortText[3];
-          //fullUrlText += " > " + data[i].shortText[0] + " > " + data[i].shortText[2];
-          snippet = data[i].shortText[4];
-          break;
+      var icon = "";
+      link = data[i].link;
+      if (link.includes("/course/view.php")) {                        // course
+          icon = "";
+          snippet = findFirstNonEmptyString(data[i].shortText, 1);
+      } else if(link.includes("/course/section.php")) {               // section
+          icon = "<img class='icon' src='static/images/section.svg' alt='Section'>";
+          fullUrlText += getFullUrlText(data[i], 1);
+          snippet = icon + findFirstNonEmptyString(data[i].shortText, 1);
+      } else if(link.includes("/mod/page/view.php")) {                // page
+          icon = "<img class='icon' src='static/images/page.svg' alt='Page'>";
+          fullUrlText += getFullUrlText(data[i], 2);
+          snippet = icon + findFirstNonEmptyString(data[i].shortText, 2);
+      }
+      else {    
+          alert("Unknown type of link: " + data[i].link);
       }
 
-      for (var j = 3; j < data[i].shortText.length - 1; j++) {
-        fullUrlText += " > " + data[i].shortText[j];
-      }
-
+   
       urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
-      urlText += "<span>" + fullUrlText + "</span>\n";
       urlText += "<div class='snippet'>" + snippet + "</div>\n";   
+      urlText += "<span>" + fullUrlText + "</span>\n";
       var div = document.createElement("div");  
       div.className += " link";
       div.innerHTML = "<a href='" + data[i].link + "' target='_blank' title='Similarity: " + data[i].similarity + "  Index: " + data[i].index + "'>" + urlText + "</a> ";
