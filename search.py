@@ -40,6 +40,9 @@ def search():
         filenameShortTexts = os.path.join(picklesDir, "shortTexts_" + input  + ".pickle")
         filenameTf = os.path.join(picklesDir, "tf_" + input + ".pickle")
         filenameTf_fit = os.path.join(picklesDir, "tf_fit_" + input + ".pickle")
+        filenameResults = os.path.join(picklesDir, "results_" + input  + ".pickle")
+        
+
 
         with open(filenameLinks, "rb") as fp:   # Unpickling
             linksLoaded = pickle.load(fp)
@@ -49,6 +52,8 @@ def search():
             tf_loaded = pickle.load(fp)
         with open(filenameTf_fit, 'rb') as fp:
             tf_fit_loaded = pickle.load(fp)
+        with open(filenameResults, "rb") as fp:   # Unpickling
+            resultsLoaded = pickle.load(fp)
 
         search_list = []
         search_list.append(search)
@@ -62,7 +67,9 @@ def search():
         print(len(linksLoaded))
         print(len(sorted_similarities))
         
-        list = [{"shortText": shortTextsLoaded[similarity[1]], "link": linksLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
+        #list = [{"shortText": shortTextsLoaded[similarity[1]], "link": linksLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
+        list = [{"results": resultsLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
+        
         print(json.dumps(list, indent=4))
         return jsonify(list)
     

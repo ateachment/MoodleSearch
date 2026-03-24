@@ -4,11 +4,14 @@
 
 def cutText(txt): # gets list of words an extract the first 18 of them
   wordlength = 18
-  wordlist = txt.split(' ')
-  if len(wordlist) > wordlength:
-    return ' '.join(wordlist[:wordlength]) + " ..."
+  if txt == "":
+    wordlist = txt.split(' ')
+    if len(wordlist) > wordlength:
+      return ' '.join(wordlist[:wordlength]) + " ..."
+    else:
+      return txt
   else:
-    return txt
+     return txt
 
 def scrapePage(link,linkText,shortText):
   print("SCRAPE_PAGE: ", linkText)
@@ -46,9 +49,16 @@ def scrapePage(link,linkText,shortText):
           for paragraph in paragraphs:
             txt += paragraph.get_text() + ' '
             if(len(short_txt) < 50 ):
-              short_txt += paragraph.get_text()
+              short_txt += paragraph.get_text() + ' '
         rawTexts[-1] += ' ' + txt                                # add txt of page to last element of rawTexts
         shortTexts[-1] += [short_txt]         # add short_txt to last element of shortTexts
+        results.append({
+          "url": link,
+          "title": linkText,
+          "shortText": short_txt,
+          "type": "page",
+        })
+
 
 def crawlPageLinks(activity, sectionname, shortText, rawText):
 
@@ -68,7 +78,17 @@ def crawlPageLinks(activity, sectionname, shortText, rawText):
             shortTextAddition = [sectionname] + [linkText]
             rawTextAddition = ' ' + linkText
             rawTexts.append(rawText + rawTextAddition)                     # append text to list rawTexts
+            
+            results.append({
+              "url": url,
+              "title": linkText,
+              "shortText": "",
+              "type": "section",
+            })
+            
             scrapePage(url,linkText,shortText + [sectionname] + [linkText])
+
+
 
     return shortTextAddition, rawTextAddition
 
@@ -89,6 +109,14 @@ def crawlSectionLinks(link_section, section, sectionname, shortText, rawText):
 
     shortTexts.append(shortText + shortTextAddition)      # append shortText
     rawTexts.append(rawText + rawTextAddition)            # append text to list rawTexts
+    
+    results.append({
+          "url": link_section["href"],
+          "title": sectionname,
+          "shortText": cutText(summarytext),
+          "type": "section",
+      })
+    
     return shortTextAddition, rawTextAddition
 
 def crawlCourse(link, shortText):
@@ -148,6 +176,7 @@ import bs4
 session = requests.Session()
 session.headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
 
+results = []
 links = []
 rawTexts = []
 rawText = ""  # init rawText
@@ -178,6 +207,14 @@ def crawlMoodlePublicCourses():
       rawTexts.append(rawText)
       shortText = [coursename, cutText(summaryText)]         # init shortText
       shortTexts.append(shortText)                 # append new shortText
+      
+      results.append({
+          "url": uri,
+          "title": coursename,
+          "description": cutText(summaryText),
+          "type": "course",
+      })
+      
       # print(uri, shortText)
       crawlCourse(uri, shortText)
       
@@ -216,6 +253,14 @@ def crawlMoodleCategoryWithLogin():  # subsection
           shortText = [coursename, cutText(summary)]         # init shortText
           shortTexts.append(shortText)                 # append new shortText
           #print(uri, shortText)
+          
+          results.append({
+            "url": uri,
+            "title": coursename,
+            "description": cutText(summary),
+            "type": "course",
+          })
+          
           crawlCourse(uri, shortText)
 
 import sys, getopt
@@ -288,6 +333,8 @@ filenameLinks = os.path.join(picklesDir, "links_" + input + ".pickle")
 filenameShortTexts = os.path.join(picklesDir, "shortTexts_" + input  + ".pickle")
 filenameTf = os.path.join(picklesDir, "tf_" + input + ".pickle")
 filenameTf_fit = os.path.join(picklesDir, "tf_fit_" + input + ".pickle")
+filenameResults = os.path.join(picklesDir, "results_" + input  + ".pickle")
+
 
 with open(filenameLinks, "wb") as fp:
   pickle.dump(links, fp)
@@ -297,5 +344,7 @@ with open(filenameTf, "wb") as fp:
   pickle.dump(tf, fp)
 with open(filenameTf_fit, "wb") as fp:
   pickle.dump(tf_fit, fp)
+with open(filenameResults, "wb") as fp:
+  pickle.dump(results, fp)
 
-print(len(links)),print(len(rawTexts),print(len(shortTexts)))
+print(len(links)),print(len(rawTexts),print(len(shortTexts),print(len(results))))

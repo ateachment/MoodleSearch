@@ -2,16 +2,6 @@
 
 const fetchDataBtn = document.querySelector("#fetchdata");
 const result = document.getElementById("result");
-/*
-var timeleft = 10;
-var downloadTimer = setInterval(function() {
-  result.innerText = timeleft;
-  if(timeleft <= 0) {
-    clearIntervall(downloadTimer);
-  }
-  timeleft -= 1;
-}, 1000);
-*/
 
 function getFullUrlText(data, startIndex) {
   var fullUrlText = "";
@@ -23,9 +13,6 @@ function getFullUrlText(data, startIndex) {
   return fullUrlText;
 }
 
-
-
-
 function findFirstNonEmptyString(arr, startIndex = 0) {
   for (let i = startIndex; i < arr.length; i++) {
     if (arr[i].trim() !== "") {
@@ -35,7 +22,52 @@ function findFirstNonEmptyString(arr, startIndex = 0) {
   return "empty"; // Return an empty string if no non-empty string is found
 }
 
+function appendData(data) {
+  if(data.length > 0)
+    for (var i = 0; i < data.length; i++) 
+    {
+      var urlText = "";  // "<span>"+data[i].link + "</span>";
+      var fullUrlText = "";
+      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'>" + data[i].results["title"];
+      var snippet = "";
+      var icon = "";
+      link = data[i].results["url"];
+      fullUrlText += data[i].results["description"];
+      snippet = data[i].results["title"];
+      switch(data[i].results["type"]) {
+        case "course":
+          icon = "";
+          break;
+        case "section":         
+          icon = "<img class='icon' src='static/images/section.svg' alt='Section'>";
+          break;
+        case "page":   
+          icon = "<img class='icon' src='static/images/page.svg' alt='Page'>";
+          break;
+        default:
+          alert("Unknown type of link: " + data[i].results["type"]);
+      }
 
+   
+      urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
+      urlText += "<div class='snippet'>" + snippet + "</div>\n";   
+      urlText += "<div class='fullUrlText'>" + fullUrlText + "</div>\n";
+      var div = document.createElement("div");  
+      div.className += "link";
+      div.innerHTML = "<a href='" + link + "' target='_blank' title='Similarity: " + data[i].similarity + "  Index: " + data[i].index + "'>" + urlText + "</a> ";
+      result.appendChild(div);
+    }
+  else
+  {
+    var div = document.createElement("div");
+    div.className += " noResult";
+    div.innerHTML = "Nothing found!";
+    result.appendChild(div);
+  }
+}
+
+
+/*
 function appendData(data) {
   //var mainContainer = document.getElementById("myData");
   if(data.length > 0)
@@ -67,9 +99,9 @@ function appendData(data) {
    
       urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
       urlText += "<div class='snippet'>" + snippet + "</div>\n";   
-      urlText += "<span>" + fullUrlText + "</span>\n";
+      urlText += "<div class='fullUrlText'>" + fullUrlText + "</div>\n";
       var div = document.createElement("div");  
-      div.className += " link";
+      div.className += "link";
       div.innerHTML = "<a href='" + data[i].link + "' target='_blank' title='Similarity: " + data[i].similarity + "  Index: " + data[i].index + "'>" + urlText + "</a> ";
       result.appendChild(div);
     }
@@ -81,6 +113,7 @@ function appendData(data) {
     result.appendChild(div);
   }
 }
+  */
 
 // gets data from API and sets the content of #result div
 async function getData() {
@@ -89,7 +122,6 @@ async function getData() {
   let data = '{ "search" : "' + search + '", "i" : "' + queryString.get('i') + '"} '
   //data.append('search', search);
   //data.append('i', queryString.get('i')); 
-  // alert(data);
   if(document.getElementById("search").value == "")
     alert("Please enter search words!");
   else
@@ -105,7 +137,6 @@ async function getData() {
                                 });
       const jsonResult = await res.json();
       result.innerText = "";
-      appendData(jsonResult)
     } catch (error) {
       console.log(error);
     }

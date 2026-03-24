@@ -90,7 +90,10 @@ a:hover {
   text-decoration: none;
   }
 .snippet {
-  margin-left: 20px;
+  margin-left: 22px;
+}
+.fullUrlText {
+  margin-left: 44px;
 }
 
 a:visited .resultHeader {
