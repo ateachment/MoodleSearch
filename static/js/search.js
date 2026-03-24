@@ -23,20 +23,22 @@ function findFirstNonEmptyString(arr, startIndex = 0) {
 }
 
 function appendData(data) {
+  //alert("appendData called with data: " + JSON.stringify(data));
   if(data.length > 0)
     for (var i = 0; i < data.length; i++) 
     {
       var urlText = "";  // "<span>"+data[i].link + "</span>";
       var fullUrlText = "";
-      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'>" + data[i].results["title"];
+      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'>" + data[i].results["course"];
       var snippet = "";
       var icon = "";
       link = data[i].results["url"];
-      fullUrlText += data[i].results["description"];
+      fullUrlText = data[i].results["shortText"];
       snippet = data[i].results["title"];
       switch(data[i].results["type"]) {
         case "course":
           icon = "";
+          snippet = "";
           break;
         case "section":         
           icon = "<img class='icon' src='static/images/section.svg' alt='Section'>";
@@ -50,7 +52,7 @@ function appendData(data) {
 
    
       urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
-      urlText += "<div class='snippet'>" + snippet + "</div>\n";   
+      urlText += "<div class='snippet'>" + icon + snippet + "</div>\n";   
       urlText += "<div class='fullUrlText'>" + fullUrlText + "</div>\n";
       var div = document.createElement("div");  
       div.className += "link";
@@ -66,54 +68,6 @@ function appendData(data) {
   }
 }
 
-
-/*
-function appendData(data) {
-  //var mainContainer = document.getElementById("myData");
-  if(data.length > 0)
-    for (var i = 0; i < data.length; i++) 
-    {
-      // alert(data[i].shortText.length + " " + data[i].shortText);
-      var urlText = "";  // "<span>"+data[i].link + "</span>";
-      var fullUrlText = "";
-      var resultHeader = "<img class='icon' src='static/images/course.svg' alt='Course'>" + data[i].shortText[0];
-      var snippet = "";
-      var icon = "";
-      link = data[i].link;
-      if (link.includes("/course/view.php")) {                        // course
-          icon = "";
-          snippet = findFirstNonEmptyString(data[i].shortText, 1);
-      } else if(link.includes("/course/section.php")) {               // section
-          icon = "<img class='icon' src='static/images/section.svg' alt='Section'>";
-          fullUrlText += getFullUrlText(data[i], 1);
-          snippet = icon + findFirstNonEmptyString(data[i].shortText, 1);
-      } else if(link.includes("/mod/page/view.php")) {                // page
-          icon = "<img class='icon' src='static/images/page.svg' alt='Page'>";
-          fullUrlText += getFullUrlText(data[i], 2);
-          snippet = icon + findFirstNonEmptyString(data[i].shortText, 2);
-      }
-      else {    
-          alert("Unknown type of link: " + data[i].link);
-      }
-
-   
-      urlText += "<div class='resultHeader'>" + resultHeader + "</div>\n";
-      urlText += "<div class='snippet'>" + snippet + "</div>\n";   
-      urlText += "<div class='fullUrlText'>" + fullUrlText + "</div>\n";
-      var div = document.createElement("div");  
-      div.className += "link";
-      div.innerHTML = "<a href='" + data[i].link + "' target='_blank' title='Similarity: " + data[i].similarity + "  Index: " + data[i].index + "'>" + urlText + "</a> ";
-      result.appendChild(div);
-    }
-  else
-  {
-    var div = document.createElement("div");
-    div.className += " noResult";
-    div.innerHTML = "Nothing found!";
-    result.appendChild(div);
-  }
-}
-  */
 
 // gets data from API and sets the content of #result div
 async function getData() {
@@ -137,6 +91,7 @@ async function getData() {
                                 });
       const jsonResult = await res.json();
       result.innerText = "";
+      appendData(jsonResult)
     } catch (error) {
       console.log(error);
     }

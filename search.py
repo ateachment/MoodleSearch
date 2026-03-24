@@ -36,18 +36,10 @@ def search():
         import os
 
         picklesDir="data/"
-        filenameLinks = os.path.join(picklesDir, "links_" + input + ".pickle")
-        filenameShortTexts = os.path.join(picklesDir, "shortTexts_" + input  + ".pickle")
         filenameTf = os.path.join(picklesDir, "tf_" + input + ".pickle")
         filenameTf_fit = os.path.join(picklesDir, "tf_fit_" + input + ".pickle")
         filenameResults = os.path.join(picklesDir, "results_" + input  + ".pickle")
         
-
-
-        with open(filenameLinks, "rb") as fp:   # Unpickling
-            linksLoaded = pickle.load(fp)
-        with open(filenameShortTexts, "rb") as fp:   # Unpickling
-            shortTextsLoaded = pickle.load(fp)
         with open(filenameTf, 'rb') as fp:
             tf_loaded = pickle.load(fp)
         with open(filenameTf_fit, 'rb') as fp:
@@ -63,10 +55,9 @@ def search():
         sorted_similarities = sorted(((value, index) for index, value in enumerate(cosinus_similarities[0])), reverse=True)
 
         #output
-        print(len(shortTextsLoaded))
-        print(len(linksLoaded))
-        print(len(sorted_similarities))
-        
+        print("len(sorted_similarities):", len(sorted_similarities))
+        print("len(resultsLoaded):", len(resultsLoaded))
+
         #list = [{"shortText": shortTextsLoaded[similarity[1]], "link": linksLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
         list = [{"results": resultsLoaded[similarity[1]], "similarity": similarity[0], "index": similarity[1]} for similarity in sorted_similarities[:10] if(similarity[0] > 0)]
         

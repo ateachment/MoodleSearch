@@ -13,7 +13,7 @@ def cutText(txt): # gets list of words an extract the first 18 of them
   else:
      return txt
 
-def scrapePage(link,linkText,shortText):
+def scrapePage(link, linkText, coursename):
   print("SCRAPE_PAGE: ", linkText)
   short_txt = ""
   head = requests.head(link, allow_redirects=True, timeout=10)
@@ -50,76 +50,63 @@ def scrapePage(link,linkText,shortText):
             txt += paragraph.get_text() + ' '
             if(len(short_txt) < 50 ):
               short_txt += paragraph.get_text() + ' '
-        rawTexts[-1] += ' ' + txt                                # add txt of page to last element of rawTexts
-        shortTexts[-1] += [short_txt]         # add short_txt to last element of shortTexts
-        results.append({
-          "url": link,
-          "title": linkText,
-          "shortText": short_txt,
-          "type": "page",
-        })
+        rawTexts[-1] += ' ' + txt                     # add txt of page to last element of rawTexts
+        results[-1]["shortText"] += ' ' + short_txt   # update shortText of last element of results
 
 
-def crawlPageLinks(activity, sectionname, shortText, rawText):
+def crawlPageLinks(activity, sectionname, coursename, rawText):
 
-    global rawTexts, shortTexts, links
+    global rawTexts
     link_page = activity.select_one("a.aalink")
 
-    shortTextAddition = []
     rawTextAddition = ""
     if link_page:
         url = link_page["href"]
         if "/mod/page/view.php" in url:
 
             linkText = link_page.select_one(".instancename").contents[0].strip()
-            links.append(url)
 
-            shortTexts.append(shortText + [linkText])
-            shortTextAddition = [sectionname] + [linkText]
             rawTextAddition = ' ' + linkText
             rawTexts.append(rawText + rawTextAddition)                     # append text to list rawTexts
             
             results.append({
+              "course": coursename,
               "url": url,
               "title": linkText,
               "shortText": "",
-              "type": "section",
+              "type": "page",
             })
             
-            scrapePage(url,linkText,shortText + [sectionname] + [linkText])
+            scrapePage(url, linkText, coursename)
 
+    return rawTextAddition
 
-
-    return shortTextAddition, rawTextAddition
-
-def crawlSectionLinks(link_section, section, sectionname, shortText, rawText):
+def crawlSectionLinks(link_section, section, sectionname, coursename, rawText):
     global shortTexts, rawTexts
 
-    links.append(link_section["href"])                    # append link to list links
-    
     summarytext = section.find('div', attrs={'class':'summarytext'})
     if (summarytext is not None):
         summarytext = summarytext.get_text(strip=True, separator=" ")
         #print("SUMMARYTEXT=", summarytext)
-        shortTextAddition = [sectionname] + [cutText(summarytext)]
         rawTextAddition = ' ' + sectionname + ' ' + summarytext
     else:
-        shortTextAddition = [sectionname]
+        summarytext = ""
         rawTextAddition = ' ' + sectionname
 
-    shortTexts.append(shortText + shortTextAddition)      # append shortText
+    
     rawTexts.append(rawText + rawTextAddition)            # append text to list rawTexts
     
     results.append({
-          "url": link_section["href"],
-          "title": sectionname,
-          "shortText": cutText(summarytext),
-          "type": "section",
+        "course": coursename,
+        "url": link_section["href"],
+        "title": sectionname,
+        "shortText": cutText(summarytext),
+        "type": "section",
       })
     
-    return shortTextAddition, rawTextAddition
+    return rawTextAddition
 
-def crawlCourse(link, shortText):
+def crawlCourse(link, coursename):
   r = session.get(link)
   #print(link)
   #print(r.status_code)
@@ -133,7 +120,7 @@ def crawlCourse(link, shortText):
 
         link_section = section.select_one("h3.sectionname a")
         if link_section:
-            shortTextAdditionSection, rawTextAdditionSection = crawlSectionLinks(link_section, section, sectionname, shortText, rawText)
+            rawTextAdditionSection = crawlSectionLinks(link_section, section, sectionname, coursename, rawText)
 
 
         activitylist = section.select_one("ul[data-for='cmlist']")
@@ -147,7 +134,7 @@ def crawlCourse(link, shortText):
 
             # normale Aktivität
             if "modtype_subsection" not in classes:
-                shortTextAddition, rawTextAddition = crawlPageLinks(activity, sectionname, shortText + shortTextAdditionSection, rawText + rawTextAdditionSection)
+                rawTextAddition = crawlPageLinks(activity, sectionname, coursename, rawText + rawTextAdditionSection)
 
             
             else:  # Subsection separat behandeln
@@ -159,10 +146,10 @@ def crawlCourse(link, shortText):
 
                     link_subsection = section.select_one("h4.sectionname a")
                     if link_subsection:
-                        shortTextAdditionSubsection, rawTextAdditionSubsection = crawlSectionLinks(link_subsection, subsection, subsection_name, shortText + shortTextAdditionSection, rawText + rawTextAdditionSection)
+                        rawTextAdditionSubsection = crawlSectionLinks(link_subsection, subsection, subsection_name, coursename, rawText + rawTextAdditionSection)
 
                     for subactivity in subsection.select("li.activity"):
-                        crawlPageLinks(subactivity, sectionname, shortText + shortTextAdditionSection + shortTextAdditionSubsection, rawText + rawTextAdditionSection + rawTextAdditionSubsection)
+                        crawlPageLinks(subactivity, sectionname, coursename, rawText + rawTextAdditionSection + rawTextAdditionSubsection)
 
         
             
@@ -177,10 +164,9 @@ session = requests.Session()
 session.headers['User-Agent'] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0"
 
 results = []
-links = []
 rawTexts = []
 rawText = ""  # init rawText
-shortTexts = []
+
 input = ""  # comand line arg
 
 def crawlMoodlePublicCourses():
@@ -202,21 +188,20 @@ def crawlMoodlePublicCourses():
       else:
         summaryText = ''
       # print("summary="+summary)
-      links.append(uri)
+
       rawText = coursename + ' ' + summaryText
       rawTexts.append(rawText)
-      shortText = [coursename, cutText(summaryText)]         # init shortText
-      shortTexts.append(shortText)                 # append new shortText
-      
+    
       results.append({
-          "url": uri,
-          "title": coursename,
-          "description": cutText(summaryText),
-          "type": "course",
+        "course": coursename,
+        "url": uri,
+        "title": coursename,
+        "shortText": cutText(summaryText),
+        "type": "course",
       })
       
       # print(uri, shortText)
-      crawlCourse(uri, shortText)
+      crawlCourse(uri, coursename)
       
 
 def crawlMoodleCategoryWithLogin():  # subsection
@@ -241,27 +226,24 @@ def crawlMoodleCategoryWithLogin():  # subsection
         courses = soup.find_all('div', attrs={"class":"course-description"})
         #print(courses[2])
         for course in courses:
-          #link = course.find('div', attrs={'class':'course-name'}).find('div', attrs={'class':'coursename'}).find('a',attrs={'class':'aalink'}).get_attribute_list('href')[0]        # extract link of course
           link = course.find('div', attrs={'class':'course-name'}).find('div', attrs={'class':'coursename'}).find('a',attrs={'class':'aalink'})
           uri = link.get_attribute_list('href')[0]        # extract uri of course
           coursename = link.get_text()
           #print(uri, coursename)
           summary = course.find('div', attrs={'class':'summary'}).get_text(strip=True, separator=" ")
           # print("summary="+summary)
-          links.append(uri)
+
           rawTexts.append(coursename + ' ' + summary)
-          shortText = [coursename, cutText(summary)]         # init shortText
-          shortTexts.append(shortText)                 # append new shortText
-          #print(uri, shortText)
           
           results.append({
+            "course": coursename,
             "url": uri,
             "title": coursename,
-            "description": cutText(summary),
+            "shortText": cutText(summary),
             "type": "course",
           })
           
-          crawlCourse(uri, shortText)
+          crawlCourse(uri, coursename)
 
 import sys, getopt
 def app(argv):
@@ -329,17 +311,11 @@ tf = TfidfVectorizer(decode_error="strict", strip_accents="unicode", analyzer=st
 tf_fit = tf.fit_transform(rawTexts)
 
 picklesDir="data/"
-filenameLinks = os.path.join(picklesDir, "links_" + input + ".pickle")
-filenameShortTexts = os.path.join(picklesDir, "shortTexts_" + input  + ".pickle")
 filenameTf = os.path.join(picklesDir, "tf_" + input + ".pickle")
 filenameTf_fit = os.path.join(picklesDir, "tf_fit_" + input + ".pickle")
 filenameResults = os.path.join(picklesDir, "results_" + input  + ".pickle")
 
 
-with open(filenameLinks, "wb") as fp:
-  pickle.dump(links, fp)
-with open(filenameShortTexts, "wb") as fp:
-  pickle.dump(shortTexts, fp)
 with open(filenameTf, "wb") as fp:
   pickle.dump(tf, fp)
 with open(filenameTf_fit, "wb") as fp:
@@ -347,4 +323,5 @@ with open(filenameTf_fit, "wb") as fp:
 with open(filenameResults, "wb") as fp:
   pickle.dump(results, fp)
 
-print(len(links)),print(len(rawTexts),print(len(shortTexts),print(len(results))))
+print("len(rawTexts):", len(rawTexts))
+print("len(results):", len(results))

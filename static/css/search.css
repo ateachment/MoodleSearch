@@ -81,23 +81,25 @@ a:link {
 a:visited {
   color: #8cb8c2;
 }
-a:hover {
+a:hover .fullUrlText, a:hover .snippet{
   text-decoration: underline;
 }
 
 .resultHeader {
-  color: #000;
-  text-decoration: none;
+  font-weight: 100;  /* leicht (Light) */
+  color: #444;   /* statt hartem schwarz */
   }
+
 .snippet {
-  margin-left: 22px;
+  font-weight: bold
 }
+
 .fullUrlText {
-  margin-left: 44px;
+  margin-left: 25px;
 }
 
 a:visited .resultHeader {
-  color: #888;
+  color: #999;  /* etwas blasser für besuchte Links */
 }
 a:hover .resultHeader {
   text-decoration: none;
